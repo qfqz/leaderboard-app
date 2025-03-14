@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Leaderboard</h1>
+    <form id="scoreForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="score">Score:</label>
+        <input type="number" id="score" name="score" required>
+        <button type="submit">Submit</button>
+    </form>
+    <table id="leaderboard">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Scores will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById('scoreForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const score = document.getElementById('score').value;
+
+            fetch('/.netlify/functions/saveScore', {
+                method: 'POST',
+                body: JSON.stringify({ name, score }),
+                headers: { 'Content-Type': 'application/json' }
+            }).then(response => response.json())
+              .then(data => {
+                  if(data.success) {
+                      loadScores();
+                  }
+              });
+        });
+
+        function loadScores() {
+            fetch('/.netlify/functions/getScores')
+                .then(response => response.json())
+                .then(scores => {
+                    const tbody = document.querySelector('#leaderboard tbody');
+                    tbody.innerHTML = scores.map(score => `
+                        <tr>
+                            <td>${score.name}</td>
+                            <td>${score.score}</td>
+                        </tr>
+                    `).join('');
+                });
+        }
+
+        loadScores(); // Load scores when the page loads
+    </script>
+</body>
+</html>
